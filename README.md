@@ -312,7 +312,10 @@ calculus. See
 [here](https://caml.inria.fr/pub/docs/manual-ocaml/expr.html) for more
 details about OCaml expression syntax. In the following, we discuss
 the most important constructs. More in-depth OCaml tutorials can be
-found [here](https://ocaml.org/learn/tutorials/).
+found [here](https://ocaml.org/learn/tutorials/). We also refer to
+the [OCaml Manual](http://caml.inria.fr/pub/docs/manual-ocaml/) for a
+comprehensive coverage of all features of the language and its
+accompanying tools and standard library.
 
 ### Basics
 
@@ -565,7 +568,7 @@ The
 module of the OCaml standard library provides common higher-order
 functions on lists such as `map`, `fold_left`, `fold_right`, etc. It
 also provides functions `hd` and `tl` that can be used to decompose an
-non-empty list into its components. However, pattern matching is
+non-empty list into its components. However, [pattern matching](#algebraic-datatypes-and-pattern-matching) is
 usually the preferred way of decomposing lists.
 
 Equality on lists and tuples is defined structurally:
@@ -586,12 +589,185 @@ val l3 : int list = [1; 2; 3]
 
 #### Parametric Polymorphism
 
+
+
 #### Algebraic Datatypes and Pattern Matching
+
+OCaml provides type constructors for user-defined immutable
+tree-like data structures. These are known as *algebraic datatypes*
+(ADTs), *variant types*, or *disjoint sum types*. 
+
+Here is an example of an algebraic data type for representing binary
+search trees:
+
+```ocaml
+type tree =
+  | Leaf
+  | Node of int * tree * tree
+```
+
+This type definition specifies that a tree is either a leaf node,
+`Leaf`, or an internal node, `Node`, consists of an integer value, and
+two subtrees (the left and right subtree of the node). `Leaf` and
+`Node` are referred to as the *variant constructors* of the ADT
+`tree`.
+
+The variants `Leaf` and `Node` also serve as the value constructors
+for type `tree`. Example:
+
+```ocaml
+# let empty = Leaf ;;
+val empty : tree = Leaf
+
+# let t = Node (3, Node (1, Leaf, Leaf), Node (6, Leaf, Leaf)) ;;
+val t : tree = Node (3, Node (1, Leaf, Leaf), Node (6, Leaf, Leaf))
+```
+
+One nice feature of ADTs is that equality `=` is defined structurally
+on ADT values, similar to lists and tuples.
+
+##### Pattern Matching
+
+ADT values can be deconstructed using pattern matching. Pattern
+matching expressions take the form:
+
+```ocaml
+match e with
+| p1 -> e1
+...
+| pn -> en
+```
+
+Similar to match expressions in Scheme, this expression first
+evaluates `e` and then matches the obtained value `v` against the
+patterns `p1` to `pn`. For the first match case `pi -> ei` whose
+pattern `pi` matches `v`, the right-hand-side expression `ei` is
+evaluated. The value obtained from `ei` is then the result value of
+the entire match expression. If no pattern matches, then a run-time
+exception will be thrown.
+
+A pattern `p` is either:
+
+* constant literal patterns `c`: here `c` must be a constant literal
+  such as `1`, `1.0`, `"Hello"`, `[]`, etc. Then `p` matches a value
+  `v` if `v` is equal to `c`.
+
+* a wildcard pattern `_`: matches any value
+
+* a variable pattern `x`: matches any value and binds `x` to that
+  value in the right-hand-side expression of the match case.
+
+* a constructor pattern `C p1`: here, `C` must be an ADT variant
+  `C of t1` of some ADT type `t` and `p1` must be a pattern
+  that matches values of type `t1`. Then `p` matches a value `v` if
+  `v` is of the form `C v1` for some value `v1` matched by `p1`. 
+    
+* a tuple pattern `(p1, ..., pn)`: where `p1` to `pn` are again
+  patterns. Then `p` matches a value `v` if `v` is a tuple `(v1, ...,
+  vn)` where `v1` to `vn` are some values matched by `p1` to `pn`.
+
+* a cons pattern `p1 :: p2`: matches values `v` that are lists of the
+  form `v1 :: v2` where the head `v1` is matched by `p1` and the tail
+  `v2` by `p2`.
+  
+* a variable binding pattern `(p1 as x)`: matches values `v` that are
+  matched by `p1` and binds `x` to `v` in the right hand side of the
+  match case.
+
+Here is how we use pattern matching to define a function that checks
+whether a binary search tree is sorted:
+
+```ocaml
+let is_sorted t = 
+  let rec check min max t = 
+    match t with
+    | Leaf -> true
+    | Node (x, left, right) ->
+      min <= x && x <= max && 
+      check min x left &&
+      check x max right
+  in
+  check min_int max_int t
+```
+
+If we define a function whose body is a match expression that matches
+the parameter of the function:
+
+```ocaml
+fun x -> match x with
+| p1 -> e1
+...
+| pn -> en
+```
+
+and the parameter `x` is not used in any of the right hand sides of
+the match cases `e1` to `en`, then this function definition can be
+abbreviated to
+
+```ocaml
+function
+| p1 -> e1
+...
+| pn -> en
+```
+
+We can thus write the function `check` inside of `is_sorted` more
+compactly:
+
+```ocaml
+let check min max = function
+| Leaf -> true
+| Node (x, left, right) ->
+  min <= x && x <= max && 
+  check min x left &&
+  check x max right
+```
+
+##### Polymorphic ADTs
+
+ADT definitions can also be polymorphic. For instance, suppose we want
+to use a binary search tree data structure to implement maps of
+integer keys to values, but we want the data structure to be
+parametric in the type of values stored in the map, then this can be
+done as follows:
+
+```ocaml
+type 'a tree =
+  | Leaf
+  | Node int * 'a * 'a tree * 'a tree
+```
+
+```ocaml
+# let ti = Node (1, 2, Leaf, Leaf) ;;
+val ti : int tree = Node (1, 2, Leaf, Leaf)
+
+# let ts = Node (1, "banana", Leaf, Leaf) ;;
+val ts : string tree = Node (1, "string", Leaf, Leaf)
+```
+
+##### Checking Exhaustiveness
+
+One of the nice features of OCaml's static type checker is that it can
+help us ensure that pattern matching expressions are exhaustive. For
+instance, if we write something like:
+
+```ocaml
+match t with
+| Node (k, v, left, right) -> x
+```
+
+Then the compiler will warn us that we have not considered all
+possible cases of values that `t` can evaluate to. The compiler will
+even provide examples of values that we have not considered in the
+match cases, in this case `Leaf`. This feature is particularly useful
+for match expressions that involve complex nested patterns.
+
+##### Tuples and Lists as ADTs
 
 Note that both tuples and lists are just special cases of algebraic
 data types. In particular, we can use list and tuple constructors in
-patterns for pattern matching like any other constructor of an
-algebraic data type:
+patterns for pattern matching, like any other variant constructor of
+an algebraic data type:
 
 Example: reversing a list
 
@@ -629,6 +805,97 @@ val reverse: 'a mylist -> 'a mylist
 # reverse (Cons (1, Cons (2, Cons (3, Nil))));;
 - : int mylist = Cons (3, Cons (2, Cons (1, Nil)))
 ```
+
+##### Pattern Guards
+
+One restriction of patterns in OCaml is that a variable pattern `x` is
+only allowed to occur once in a compound pattern. So if we translate
+our implementation of `removeDuplicates` from Scheme to OCaml:
+
+```ocaml
+let rec removeDuplicates = function
+  | hd :: hd :: tl -> removeDuplicates (hd :: tl)
+  | hd :: tl -> hd :: removeDuplicates tl
+  | [] -> []
+```
+
+the compiler will complain with the following error
+
+```
+Error: Variable hd is bound several times in this matching
+```
+
+We can avoid this problem by using different variable names for the
+two occurrences of `hd` in the first pattern and then enforce their
+equality using a *pattern guard*:
+
+```ocaml
+let rec removeDuplicates = function
+  | hd1 :: hd2 :: tl when hd1 = hd2 -> removeDuplicates (hd2 :: tl)
+  | hd :: tl -> hd :: removeDuplicates tl
+  | [] -> []
+```
+
+The guard expression `hd1 = hd2` is evaluated after the pattern `hd1
+:: hd2 :: tl` has been matched successfully and the right hand side
+expression is only evaluated if the guard expression evaluates to
+`true`. In general, any expression of type `bool` can be used as a
+pattern guard.
+
+Here is a slightly optimized version of the above implementation that
+uses a variable binding pattern to avoid the construction of a copy of
+the tail list in the first case of the match expression:
+
+```ocaml
+let rec removeDuplicates = function
+  | hd1 :: (hd2 :: _ as tl) when hd1 = hd2 -> removeDuplicates tl
+  | hd :: tl -> hd :: removeDuplicates tl
+  | [] -> []
+```
+
+Note that `tl` is bound to the value matched by the pattern `hd2 :: _`.
+
+##### The `option` Type
+
+A useful predefined ADT is the `option` type:
+
+```ocaml
+type 'a option =
+  | None
+  | Some of 'a
+```
+
+This type is useful for defining *partial* functions that may not
+always have a defined return value. For instance, here is how we can
+implement a function `find` that finds the value associated with a
+given key `k` in a map implemented as a binary search tree:
+
+```ocaml
+let res find k = function
+  | Node (k1, v, left, right) ->
+    if k1 = k then Some v
+    else if k1 > k then find k left
+    else find k right
+  | Leaf -> None
+```
+
+A client of `find` can now pattern match on the result value of `find`
+to determine whether the key `k` was present in the tree and what the
+associated value `v` was. The advantage of this implementation is that
+the static type checker will check for us that we consider the
+possibility that the key was not found. Contrast this with the use of
+`null` as an indicator of an undefined return value in many other
+languages, which often leads to run-time errors because the case that
+the case of a `null` value is not handled by the client and the
+compiler is unable to detect this.
+
+#### Beyond Basic ADTs
+
+OCaml also supports several generalizations of the basic ADTs
+discussed here,
+including
+[generalized algebraic datatypes](https://caml.inria.fr/pub/docs/manual-ocaml/extn.html#sec252) and
+[extensible variant types](https://caml.inria.fr/pub/docs/manual-ocaml/extn.html#sec266).
 
 #### Records
 
