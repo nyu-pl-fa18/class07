@@ -542,7 +542,7 @@ list must belong to the same type).
 
 Similar to Scheme, list values are constructed from the empty list,
 denoted `[]`, using the *cons* constructor, denoted `::`. The cons
-operator `::` is an infix operator and right-associative. Examples
+constructor `::` is an infix operator and right-associative. Examples
 
 ```ocaml
 # 1 :: 2 :: 3 :: []
@@ -601,6 +601,91 @@ val l3 : int list = [1; 2; 3]
 
 #### Parametric Polymorphism
 
+One key feature of the type systems of languages in the ML family is
+that they support *polymorphic types*. Polymorphic types are similar
+to generics in languages like Java and Scala. However, they are
+slightly different and we will discuss their relationship to generics
+later.
+
+More generally, *polymorphism* allows a single piece of code to work
+with values of multiple types. The kind of polymorphism that languages
+in the ML family support is referred to as *parametric polymorphism*
+(or *let-polymorphism*). This can be viewed as allowing functions to
+implicitly depend on type parameters. 
+
+As an example, consider the identity function in OCaml:
+
+```ocaml
+let id x = x
+```
+
+Clearly, `id` does not depend on the specific type of the value passed
+to `x` because the function simply returns `x` without doing anything
+with it. In fact, OCaml allows `id` to be called with values of
+different types:
+
+```ocaml
+# id 3 ;;
+- : int = 3
+
+# id "banana" ;;
+- : string = "banana"
+```
+
+The type that the compiler infers for `id` is `'a -> 'a`. A type name
+that is preceded with a quote symbol, like `'a`, is a *type
+variable*. One typically reads type variables as if they were greek
+letters, i.e., `'a` is pronounced "alpha", `'b` is pronounced "beta",
+etc.
+
+The type variables occurring in an OCaml type are implicitly
+*universally quantified*. That is, the type `'a -> 'a` should be read
+as describing functions that for every `'a` can take in a value of
+type `'a` and return again a value of type `'a`. The function `id` is
+implicitly parameterized by the type `'a` of its parameter `x`. 
+
+The type tells us that for every call to `id`, the return value is
+guaranteed to have the same type as the argument value that we pass
+into `id`. Because type variables are implicitly quantified, they can
+be alpha-renamed without changing the meaning of the type. For
+instance, the types `'a -> 'a` and `'b -> 'b` are equivalent. On the
+other hand, the types `'a -> 'b -> 'a` and `'a -> 'a -> 'a` are not
+equivalent.  However, `'a -> 'b -> 'a` is compatible with the type `'a
+-> 'a -> 'a`, but not the other way around - more on that later.
+
+Parametric polymorphism allows us to write generic code while
+retaining the benefits of static type checking and inference. 
+
+For example, consider the following code snippet that uses the
+function `id`:
+
+```ocaml 
+id 3 + 1 
+``` 
+
+The type checker can now infer that the addition operation will safely
+execute at run-time. The reason is that it knows that `id` is called
+with an `int` value (namely `3`) and the type of `id` then tells it
+that the result value of `id` will again be of type `int`. Thus, the
+addition operation will be applied to two `int` values and is
+safe. Note that in order to do this reasoning, the type checker no
+longer needs to inspect how `id` is exactly implemented. It only needs
+to know its type, which it infers from the definition of `id` once and
+for all.
+
+For example, the following polymorphic function allows us to flip the
+order of the arguments of an arbitrary curried function:
+
+```ocaml
+# let flip f x y = f y x ;;
+val flip : ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+```
+
+That is `flip` takes a function of type `'a -> 'b -> 'c` and returns a
+function of type `b -> 'a -> 'c`.
+
+We will discuss below how the compiler infers this type from the
+definition of `flip`.
 
 
 #### Algebraic Datatypes and Pattern Matching
@@ -918,13 +1003,221 @@ including
 
 #### Records
 
-A *record* is a collection of named values called *fields*. 
+A *record* is a collection of named values called *fields* (think of
+them as unordered tuples, whose components have names). Records are
+similar to `struct` types in C and C++ and closely related to object
+types in object-oriented languages.
 
+Record types take the form `{f1: t1; ...; fn: tn}` where the `fi` are
+field names and the `ti` are the types of the fields. The value
+constructor of records takes a similar form: `{f1 =
+e1; ...; fn = en}`. This expression creates a record value with fields
+`f1` to `fn` initialized with the values that `e1` to `en` evaluate
+to. Note that record types must be declared explicitly with a type
+definition before they can be used. Example:
 
+```ocaml
+# type person = 
+  { first_name: string;
+    last_name: string;
+    age: int
+  }
 
-### Type Equivalence and Compatibility
+# let jane = 
+    { first_name = "Jane"; 
+      last_name = "Doe"
+    } ;;
+val jane : person = {first_name = "Jane"; last_name = "Doe"}
+```
+
+We can access a field of `f` of a record `x` by using the notation
+`x.f`:
+
+```ocaml
+# jane.last_name
+- : string = "Doe"
+```
+
+Record fields are immutable by default (they can be made mutable by
+prepending the field name in the record type definition with the
+keyword `mutable`. When working with immutable records, instead of
+"modifying" the value of a record is done by creating a copy of the
+record and changing the value of the field to be modified to its new
+value. The old record value thus remains unaffected. OCaml provides a
+convenient syntax for copying record fields:
+
+```ocaml
+# let john = { jane with first_name = "John } ;;
+val john : person = {first_name = "John"; last_name = "Doe"}
+
+# john.first_name
+- : string = "John"
+
+# jane.first_name
+- : string = "Jane"
+```
+
+### Type Compatibility
+
+Type compatibility in OCaml is based on the notion
+of
+[*unification*](https://en.wikipedia.org/wiki/Unification_(computer_science)). 
+
+A *substitution* σ for a type `t` is a mapping of the type variables
+occurring in `t` to types. Example: a possible substitution for
+the type `'a -> 'b` is the mapping σ = `{'a ~> int, 'b ~> int}`. Another
+one is σ'=`{'a ~> 'a, 'b ~> 'b}`. 
+
+Applying a substitution σ to a type `t`, written `t`σ, results in the
+type `t` where all occurrences of type variables have been replaced
+with according to σ. For instance, if `t` = `'a -> 'b` and σ = `{'a
+-> int, 'b -> int}`, then `t`σ = `int -> int`.
+
+Two types `s` and `t` are said to be *unifiable* if there exists a
+substitution σ for the type variables occurring in both `s` and `t`
+such that `s`σ = `t`σ. The substitution σ is called a *unifier* for `s`
+and `t`. Example: the (unique) unifier for `s = 'a -> int` and `t =
+string -> 'b` is σ = `{'a ~> string, 'b ~> int}`. On the other hand,
+there exists no unifier for `t = 'a -> int` and `s = string -> 'a`
+because `string` and `int` are distinct types.
+
+A type `t` is *more general* than a type `s` if there exists a unifier σ
+for `t` and `s` such that `s`σ = `s`. Example: the type `'a -> 'b` is
+more general than the type `int -> 'b`.
+
+A value `v` of type `t` is compatible with type `s` (i.e. `v` can be
+used in a context that expects a value of type `t`) if `t` is more
+general than `s`. This definition may seem counter-intuitive at
+first. However, it captures the intuition that the more general type `t`
+denotes a smaller set of values than `s` and, hence, every value of
+type `t` is also a value of type `s`. To see this, consider the types
+`t = 'a -> int` and `s = int -> int`, then `t` is more general than
+`s`. Now take the expression `f 3 + 1`. Here, the context of `f`
+expects `f` to be a function of type `int -> int` because we are
+calling `f` with value `3` which is of type `int` and we are using the
+result of the call in an addition operation using `+` which also
+expects arguments of type `int`.
+
+Now, if the actual type of `f` is `'a -> int`, then this tells us that
+we can call `f` with any value we like, including `int` values and the
+result is always going to be an `int`. Thus it is safe to use `f` in
+this context.
 
 ### Type Inference
 
+The idea behind the type inference algorithm of OCaml (and related
+languages in the ML family) is to compute for every subexpression `e`
+in a program, the most general type `t` such that all the values `v`
+that `e` may evaluate to have type `t`.
 
+The algorithm is guided by the syntax of expressions, taking advantage
+of the fact that the constant literals, inbuilt operators, and value
+constructors from which expressions are built impose constraints on
+the types that the values of these expressions may have. Technically,
+the algorithm works by deriving a system of type equality constraints
+from every expression and then solving this constraint system by
+computing a *most general unifier* that satisfies all the type
+equalities simultaneously.
+
+Rather than describing this algorithm formally, we explain it through
+an example. Let us reconsider the function `flip`:
+
+```ocaml
+let flip f x y = f y x
+```
+
+To infer the most general type of `flip`, we can proceed as
+follows. First, the syntactic structure of the `let` constructs tells
+us that `flip` must be a curried function that takes in three
+parameters `f`, `x`, and `y` one at a time. Thus let us introduce type
+variables for the types of those parameters:
+
+* `f: 'a`
+* `x: 'b`
+* `y: 'c`
+
+Then `flip` itself must have a type of the shape
+
+`flip: 'a -> 'b -> 'c -> 'd`
+
+where `'d` stands for the type of the body `f y x` of the function.
+
+Now let's analyze the body `f y x` to infer additional constraints on
+these type variables. When we evaluate `f y x`, we will first evaluate
+the call `f y`. From this expression, we can infer that `f` must be a
+function (since it occurs on the left hand side of a call). Thus the
+type `'a` of `f` must be a function type. Moreover, since we are
+passing `y` to `f`, we can conclude that the parameter type of that
+function type must be the type `'c` of `y`. Hence, we can conclude
+that `'a` and `'c` must satisfy the equality
+
+`'a = ('c -> 'e)`
+
+for some type represented by type variable `'e`. 
+
+After, evaluating `f y`, we would call the result of this call again,
+passing `x` as argument. Thus we can conclude that the result type
+`'e` must again be a function type, and the parameter type of this
+function type must be the type of `x` which is `'b`. Thus:
+
+`'e = ('b -> 'g)`
+
+for some type variable `'g` representing the type of the result value
+of the second call.
+
+Finally, we know that the result value of `f x y` whose type is `'g`
+is also the final result value of `flip`, which have determined to be
+`'d`. Thus we must also have
+
+`'d = 'g`
+
+In total, we have collected the constraints:
+
+`'a = ('c -> 'e)`
+
+`'e = ('b -> 'g)` and
+
+`'d = 'g`
+
+We are now looking for a most general unifier that unifies the types
+in each equality constraint simultaneously. The basic idea for this
+unifier, is just to orient the equations, so that equalities between a
+type variable and a type are viewed as a mapping in a substitution:
+
+
+`'a ~> ('c -> 'e)`
+
+`'e ~> ('b -> 'g)`
+
+`'d ~> 'g`
+
+We only need to make sure that the variables on the left-hand sides of
+the mappings `~>` don't occur on the right-hand sides. Here only `'e`
+occurs on both sides. We can eliminate `'e` on the right-hand side by
+applying the substitution `'e ~> ('b -> 'g)` yielding
+
+`'a ~> ('c -> ('b -> 'g))`
+
+`'e ~> ('b -> 'g)`
+
+`'d ~> 'g`
+
+Note that applying this substitution to the types of both sides of
+each equality constraint in our constraint system in fact makes the
+types in each equality constraint equal.
+
+If we now apply this substitution to the type 
+
+`'a -> 'b -> 'c -> 'd`
+
+of `split`, we obtain:
+
+`('c -> ('b -> 'g)) -> 'b -> 'c -> 'g`
+
+Note that this type is equal to the type
+
+`('a -> 'b -> 'c) -> 'b -> 'a -> 'c`
+
+which the OCaml compiler infers, assuming we simultaneously rename
+`'c` to `'a` and `'g` to `'c`.
 
