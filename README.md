@@ -128,7 +128,7 @@ Advantages of static typing over dynamic typing:
   needed; compiler has more opportunities for optimization because it
   has more information about what the program does.
 
-* better error checking: type errors are detected earlier, compiler
+* better error checking: type errors are detected earlier; compiler
   can guarantee that no type errors will occur (if language is also
   strongly typed).
 
@@ -151,17 +151,19 @@ Advantages of dynamic typing over static typing:
   
 It is often considered easier to write code in dynamically typed
 languages. However, as the size and complexity of a software system
-increases, these advantages turn into disadvantages because type
-errors become harder to detect and debug. Hence, statically typed
-languages are often preferred for large and complex projects.
+increases, the advantages of dynamic typing turn into disadvantages
+because type errors become harder to detect and debug. Hence,
+statically typed languages are often preferred for large and complex
+projects. Also, for performance critical code, dynamic typing is often
+too costly.
 
 The distinction between weak/strong and static/dynamic is not always
 clear cut. For instance, Java is mostly statically typed but certain
 type checks are performed at run-time due to loopholes in the static
-type checkers. Some so-called *gradually typed* languages even allow
+type checker. Some so-called *gradually typed* languages even allow
 the programmer to choose between static and dynamic type checking for
-different components of the same program. Examples include Dart and
-TypeScript.
+different parts of a single program. Examples of such languages
+include Dart and TypeScript.
 
 Similarly, the distinction between weak and strong type systems is not
 always completely clear and some people use slightly different
@@ -186,8 +188,8 @@ object-oriented language.
 
 OCaml belongs to the ML family of languages. ML stands for *Meta
 Language*, which was originally developed by Robin Milner in the early
-1970s for writing theorem provers, i.e., programs that can
-automatically find and check the proofs of mathematical theorems. ML
+1970s for writing theorem provers (i.e., programs that can
+automatically find and check the proofs of mathematical theorems). ML
 took many inspirations from Lisp but introduced several new language
 features intended to make programming less error prone, in particular
 a powerful and very well designed static type system.
@@ -200,11 +202,11 @@ Languages that belong to the ML family share the following features:
 * function calls use call-by-value semantics (call-by-name can be
   simulated using closures)
 * automated memory management via garbage collection
-* strong and static typing
+* strong static typing
 * powerful type system
-  * parametric polymorphism (somewhat like generics)
+  * parametric polymorphism (similar to generics)
   * structural equivalence of types
-  * all with automated static type inference!
+  * all of this with automated static type inference!
 * advanced module system with higher-order modules (*functors*)
 * exceptions
 * miscellaneous features:
@@ -218,22 +220,22 @@ Popular implementations and dialects of ML include
 * MLton
 * OCaml
 * F\# (Microsoft; derived from OCaml)
-* Reason (Facebook; derived from and implemented in OCaml)
+* Reason (Facebook; derived from and implemented on top of OCaml)
 
-The design of the Haskell language was also strongly influenced by ML.
+The design of Haskell was also strongly influenced by ML.
 
-We will focus on the OCaml language. OCaml is a general purpose
-programming language that was initially developed in the late 1990s by
-a team of French computer scientists. In addition to the features
-shared by all languages in the ML family, OCaml also provides:
+We will focus on OCaml, which is a general purpose programming
+language that was initially developed in the late 1990s by a team of
+French computer scientists. In addition to the features shared by all
+languages in the ML family, OCaml also provides:
 
 * a compiler that produces efficient native machine code for many
   architectures
   
 * a class system that enables object-oriented programming
 
-We will mostly ignore OCaml's class system and imperative features and
-focus on the functional core of the language.
+We will ignore OCaml's class system and imperative features and focus
+on the functional core of the language.
 
 ### Installation, Build Tools, and IDEs
 
@@ -241,48 +243,55 @@ Most Linux distributions as well as homebrew on Mac OS come with
 precompiled packages for OCaml. There is also a Windows
 installer. However, I suggest to install OCaml
 using [opam](https://opam.ocaml.org/), which is a package manager for
-OCaml and provides many other useful tools for developing OCaml
-programs. For the installation instructions
-see [here](https://opam.ocaml.org/doc/Install.html).
+OCaml that makes it easy to install many other useful tools for
+developing OCaml programs. Please follow
+the
+[installation instructions of opam](https://opam.ocaml.org/doc/Install.html) to
+install opam on your system.
 
 Once you have opam installed, you can install and set up the most
-recent version of OCaml by executing the following commands in a
-terminal:
+recent version of the OCaml language and compiler by executing the
+following command in a terminal:
 
 ```bash
-opam switch 4.07.0
-eval $(opam config env)
+opam init
 ```
 
 The installation will take a while since opam will download the
-sources of the OCaml compiler and compile them from scratch. Once, the
-installation has completed, you can execute `ocaml`, which should
-start an OCaml REPL session.
+sources of the OCaml compiler and compile it from scratch. Follow
+the instructions provided by the output of this command to set up your
+environment variables. Once, the installation has completed, you can
+execute `ocaml`, which starts an OCaml REPL session:
+
+```ocaml
+        OCaml version 4.07.1
+
+#
+```
 
 If you want to evaluate an OCaml expression in the REPL, you need to
 terminate it by a double semicolon `;;` and then press `Enter`:
 
 ```ocaml
-        OCaml version 4.07.0
-
-# 3 + 1;;
+# 3 + 1 ;;
 - : int = 4
 
-# let x = 3 + 1;;
+# let x = 3 + 1 ;;
 val x : int = 4
 
-# #quit;;
+# #quit ;;
 ```
 
-Double semicolons are not needed in OCaml source code files
-that are processed by the compiler.
+These double semicolons are only needed in the REPL but not in source
+code files that are processed by the compiler.
 
 In addition to the OCaml compiler and runtime, you also want to
 install the OCaml library
 manager
 [ocamlfind](http://projects.camlcity.org/projects/findlib.html) and
-build tool [ocamlbuild](https://github.com/ocaml/ocamlbuild/) which
-you can do via opam:
+the OCaml build
+tool [ocamlbuild](https://github.com/ocaml/ocamlbuild/).  You can
+do this via opam:
 
 ```bash
 opam install -y ocamlfind
@@ -291,17 +300,17 @@ opam install -y ocamlbuild
 
 These tools provide similar functionality as `sbt` does for Scala.
 
-Several IDEs have plugins for OCaml. I suggest
-using [Merlin](https://github.com/ocaml/merlin) which can be used
-directly with common editors like Emacs and Vim, and can also be
-integrated into other editors and IDEs via third-party plugins,
-including Atom, Sublime, and Visual Studio Code. For installation
-instructions via opam and further details, please see
-Merlin's [project website](https://github.com/ocaml/merlin).
+Several IDEs have plugins for OCaml. I suggest to
+use [Merlin](https://github.com/ocaml/merlin) which provides IDE
+support for OCaml in common editors like Emacs and Vim. Merlin can
+also be integrated into other editors and IDEs via third-party
+plugins, including Atom, Sublime, and Visual Studio Code. For
+installation instructions via opam and further details, please see
+[Merlin's project website](https://github.com/ocaml/merlin).
 
 ### Syntax
 
-OCaml expressions are constructed from inbuilt constants (numbers,
+OCaml expressions are constructed from constant literals (numbers,
 booleans, etc.) and inbuilt operators (arithmetic and logical
 operators, etc.) using lambda abstraction and function
 application. Inbuilt binary operators use infix notation and follow
@@ -311,8 +320,8 @@ left associative, just like in the lambda
 calculus. See
 [here](https://caml.inria.fr/pub/docs/manual-ocaml/expr.html) for more
 details about OCaml expression syntax. In the following, we discuss
-the most important constructs. More in-depth OCaml tutorials can be
-found [here](https://ocaml.org/learn/tutorials/). We also refer to
+the most important syntactic forms. More detailed OCaml tutorials can
+be found [here](https://ocaml.org/learn/tutorials/). We also refer to
 the [OCaml Manual](http://caml.inria.fr/pub/docs/manual-ocaml/) for a
 comprehensive coverage of all features of the language and its
 accompanying tools and standard library.
@@ -327,9 +336,10 @@ module.
 Top-level definitions in a module are introduces using `let x = init`
 which binds `x` to the value obtained from evaluating the expression
 `init`. The scope of the let-binding is the remainder of the module
-that follows the definition (with nested let-bindings of `x` yielding
-holes in the scope as usual). The scope of the binding for `x`
-introduced by `let` excludes the definition expression `init`.
+that follows the definition (with nested let-bindings of `x` within
+that scope yielding holes in the scope as usual). The scope of the
+binding for `x` introduced by `let` excludes the definition expression
+`init`.
 
 Example:
 
@@ -381,8 +391,8 @@ let rec fac x =
   else x * fac (x + 1)
 ```
 
-If multiple definitions have recursive dependencies, they can be
-combined with `and`:
+If multiple definitions have mutually recursive dependencies, they can be
+defined with `let rec ... and ...`:
 
 ```ocaml
 let rec f x = g x
@@ -400,7 +410,7 @@ Local mutual recursive definitions use `let rec ... and ... in body`
 syntax similar to top-level let-bindings.
 
 (Structural) equality between two values can be tested with `=` and
-inequality with `<>`. 
+disequality with `<>`. 
 
 ```ocaml
 # 1 = 1 ;;
@@ -415,7 +425,7 @@ inequality with `<>`.
 
 ### Primitive Types
 
-The primitive types of OCaml are
+The most important primitive types of OCaml are
 
 Type | Examples | Description
 ---|---|---
@@ -426,7 +436,7 @@ Type | Examples | Description
 `bool` | true, false | booleans
 `char` | 'a', 'b', 'x' | 8-bit character
 `string` | "Hello" | strings
-`unit` | () | the empty tuple (like Scala's `Unit`)
+`unit` | () | the empty tuple (like Scala's `Unit` type)
 
 For each type, we also include some examples of constant literals that
 have that type.
@@ -434,8 +444,8 @@ have that type.
 ### Compound Types
 
 More complex compound types are obtained from simpler types via *type
-constructors*. Each type constructor is partnered with one or more
-*value constructor* that constructs a value of the corresponding
+constructors*. Each type constructor is accompanied by one or more
+*value constructors* that construct values of the corresponding
 compound type from values of its composite types. We discuss the most
 important type and value constructors in the following.
 
@@ -456,7 +466,7 @@ particular, the type `int -> int -> int` should be interpreted as `int
 -> (int -> int)`, which is the type of a curried function. Example
 
 ```ocaml
-# let plus x y = x + y;;
+# let plus x y = x + y ;;
 val plus : int -> int -> int
 ```
 
@@ -497,8 +507,9 @@ The type constructor `*` has higher precedence than `->`. So the type
 and returns again an integer (rather than a pair of an integer and a
 function from integers to integers).
 
-The components of a pair `(1, 2)` can be extracted using predefined
-functions `fst` and `snd` (similar to `car` and `cdr` in Scheme):
+The components of a pair `(1, 2)` can be extracted using the
+predefined functions `fst` and `snd` (these are similar to `car` and
+`cdr` in Scheme):
 
 ```ocaml
 # let p = (1, 2) ;;
@@ -520,17 +531,18 @@ often be omitted:
 val p : int * int = (1, 2)
 ```
 
-However, this feature should be used carefully (see below).
+However, this feature of the syntax should be used carefully (see
+below).
 
 The type `t list` denotes a list whose elements belong to type `t`. As
-in Scheme, lists in OCaml are immutable. However, unlike in Scheme
-where lists are *heterogeneous* (i.e., elements of different types can
-be stored in the same list), OCaml lists are *homogeneous* (all
-elements of a list must belong to the same type `t`).
+in Scheme, lists are immutable. However, unlike in Scheme where lists
+are *heterogeneous* (i.e., values of different types can be stored in
+the same list), OCaml lists are *homogeneous* (all values stored in a
+list must belong to the same type).
 
 Similar to Scheme, list values are constructed from the empty list,
-denoted `[]`, using the *cons* constructor, denoted `::`. Note that
-the operator `::` is right-associative. Examples
+denoted `[]`, using the *cons* constructor, denoted `::`. The cons
+operator `::` is an infix operator and right-associative. Examples
 
 ```ocaml
 # 1 :: 2 :: 3 :: []
@@ -595,10 +607,9 @@ val l3 : int list = [1; 2; 3]
 
 OCaml provides type constructors for user-defined immutable
 tree-like data structures. These are known as *algebraic datatypes*
-(ADTs), *variant types*, or *disjoint sum types*. 
+(ADTs), *variant types*, or *(disjoint) sum types*. 
 
-Here is an example of an algebraic data type for representing binary
-search trees:
+Here is an example of an ADT for representing binary search trees:
 
 ```ocaml
 type tree =
@@ -606,14 +617,14 @@ type tree =
   | Node of int * tree * tree
 ```
 
-This type definition specifies that a tree is either a leaf node,
-`Leaf`, or an internal node, `Node`, consists of an integer value, and
-two subtrees (the left and right subtree of the node). `Leaf` and
-`Node` are referred to as the *variant constructors* of the ADT
-`tree`.
+This type definition specifies that a value of type `tree` is either a
+leaf node, `Leaf`, or an internal node, `Node`, which consists of an
+integer value, and two subtrees (the left and right subtree of the
+node). `Leaf` and `Node` are referred to as the *variant constructors*
+of the ADT `tree`.
 
-The variants `Leaf` and `Node` also serve as the value constructors
-for type `tree`. Example:
+The variant constructors `Leaf` and `Node` also serve as the value
+constructors for type `tree`:
 
 ```ocaml
 # let empty = Leaf ;;
@@ -640,31 +651,31 @@ match e with
 
 Similar to match expressions in Scheme, this expression first
 evaluates `e` and then matches the obtained value `v` against the
-patterns `p1` to `pn`. For the first match case `pi -> ei` whose
+patterns `p1` to `pn`. For the first *matching* `pi -> ei` whose
 pattern `pi` matches `v`, the right-hand-side expression `ei` is
 evaluated. The value obtained from `ei` is then the result value of
 the entire match expression. If no pattern matches, then a run-time
 exception will be thrown.
 
-A pattern `p` is either:
+The most important kinds of patterns `p` are:
 
-* constant literal patterns `c`: here `c` must be a constant literal
-  such as `1`, `1.0`, `"Hello"`, `[]`, etc. Then `p` matches a value
-  `v` if `v` is equal to `c`.
+* a constant literal pattern `c`: here `c` must be a constant literal
+  such as `1`, `1.0`, `"Hello"`, `[]`, etc. The pattern `c` matches a
+  value `v` iff `v` is equal to `c`.
 
 * a wildcard pattern `_`: matches any value
 
 * a variable pattern `x`: matches any value and binds `x` to that
-  value in the right-hand-side expression of the match case.
+  value in the right-hand-side expression of the matching.
 
-* a constructor pattern `C p1`: here, `C` must be an ADT variant
-  `C of t1` of some ADT type `t` and `p1` must be a pattern
-  that matches values of type `t1`. Then `p` matches a value `v` if
-  `v` is of the form `C v1` for some value `v1` matched by `p1`. 
+* a constructor pattern `C p1`: here, `C` must be an ADT variant `C of
+  t1` of some ADT and `p1` must be a pattern that matches values of
+  type `t1`. Then `p` matches a value `v` if `v` is of the form `C v1`
+  for some value `v1` matched by `p1`.
     
-* a tuple pattern `(p1, ..., pn)`: where `p1` to `pn` are again
-  patterns. Then `p` matches a value `v` if `v` is a tuple `(v1, ...,
-  vn)` where `v1` to `vn` are some values matched by `p1` to `pn`.
+* a tuple pattern `(p1, ..., pn)`: matches a value `v` if `v` is a
+  tuple `(v1, ..., vn)` where `v1` to `vn` are some values matched by
+  the patterns `p1` to `pn`.
 
 * a cons pattern `p1 :: p2`: matches values `v` that are lists of the
   form `v1 :: v2` where the head `v1` is matched by `p1` and the tail
@@ -672,7 +683,7 @@ A pattern `p` is either:
   
 * a variable binding pattern `(p1 as x)`: matches values `v` that are
   matched by `p1` and binds `x` to `v` in the right hand side of the
-  match case.
+  matching.
 
 Here is how we use pattern matching to define a function that checks
 whether a binary search tree is sorted:
@@ -701,7 +712,7 @@ fun x -> match x with
 ```
 
 and the parameter `x` is not used in any of the right hand sides of
-the match cases `e1` to `en`, then this function definition can be
+the matchings `e1` to `en`, then this function definition can be
 abbreviated to
 
 ```ocaml
@@ -712,7 +723,7 @@ function
 ```
 
 We can thus write the function `check` inside of `is_sorted` more
-compactly:
+compactly like this:
 
 ```ocaml
 let check min max = function
@@ -728,7 +739,7 @@ let check min max = function
 ADT definitions can also be polymorphic. For instance, suppose we want
 to use a binary search tree data structure to implement maps of
 integer keys to values, but we want the data structure to be
-parametric in the type of values stored in the map, then this can be
+parametric in the type of values stored in the map. This can be
 done as follows:
 
 ```ocaml
@@ -749,7 +760,7 @@ val ts : string tree = Node (1, "string", Leaf, Leaf)
 
 One of the nice features of OCaml's static type checker is that it can
 help us ensure that pattern matching expressions are exhaustive. For
-instance, if we write something like:
+instance, suppose we write something like:
 
 ```ocaml
 match t with
@@ -759,8 +770,45 @@ match t with
 Then the compiler will warn us that we have not considered all
 possible cases of values that `t` can evaluate to. The compiler will
 even provide examples of values that we have not considered in the
-match cases, in this case `Leaf`. This feature is particularly useful
-for match expressions that involve complex nested patterns.
+match expression: in this case `Leaf`. This feature is particularly
+useful for match expressions that involve complex nested patterns.
+
+##### The `option` Type
+
+One of the predefined ADTs of OCaml is the `option` type:
+
+```ocaml
+type 'a option =
+  | None
+  | Some of 'a
+```
+
+This type is useful for defining *partial* functions that may not
+always have a defined return value. For instance, here is how we can
+implement a function `find` that finds the value associated with a
+given key `k` in a map implemented as a binary search tree, if such an
+association exists:
+
+```ocaml
+let res find k = function
+  | Node (k1, v, left, right) ->
+    if k1 = k then Some v
+    else if k1 > k then find k left
+    else find k right
+  | Leaf -> None
+```
+
+A client of `find` can now pattern-match on the result value of `find`
+to determine whether the key `k` was present in the tree and what the
+associated value `v` was in that case. The advantage of this
+implementation is that the static type checker will check for us that
+the client code will also consider the possibility that the key was
+not found by `find`.
+
+Contrast this with the use of `null` as an indicator of an undefined
+return value in many other languages. The use of `null` values often
+leads to run-time errors because the `null` case is not handled by the
+client code and the compiler is unable to detect this at compile-time.
 
 ##### Tuples and Lists as ADTs
 
@@ -783,9 +831,9 @@ let reverse xs =
 ```
 
 Having tuples and lists as types that are built into the language is
-just a matter of convenience. One could equally treat them as
-user-defined types that are implemented in a library. Here, is a
-user-defined version of the type `'a list`:
+just a matter of convenience. One could just as well implement lists
+and tuples as user-defined types in a library. Here, is a user-defined
+version of the type `'a list`:
 
 ```ocaml
 type 'a mylist = 
@@ -809,8 +857,9 @@ val reverse: 'a mylist -> 'a mylist
 ##### Pattern Guards
 
 One restriction of patterns in OCaml is that a variable pattern `x` is
-only allowed to occur once in a compound pattern. So if we translate
-our implementation of `removeDuplicates` from Scheme to OCaml:
+only allowed to occur at most once in a compound pattern. For
+instance, lets look at the following literal translation of our
+implementation of `removeDuplicates` from Scheme to OCaml:
 
 ```ocaml
 let rec removeDuplicates = function
@@ -819,15 +868,17 @@ let rec removeDuplicates = function
   | [] -> []
 ```
 
-the compiler will complain with the following error
+The compiler will complain with the following error for the first
+matching in the definition of `removeDuplicates`:
 
 ```
 Error: Variable hd is bound several times in this matching
 ```
 
 We can avoid this problem by using different variable names for the
-two occurrences of `hd` in the first pattern and then enforce their
-equality using a *pattern guard*:
+two occurrences of `hd` in the pattern of the first matching and then
+enforce the equality of the values matched by these variables using a
+*pattern guard*:
 
 ```ocaml
 let rec removeDuplicates = function
@@ -837,14 +888,16 @@ let rec removeDuplicates = function
 ```
 
 The guard expression `hd1 = hd2` is evaluated after the pattern `hd1
-:: hd2 :: tl` has been matched successfully and the right hand side
-expression is only evaluated if the guard expression evaluates to
-`true`. In general, any expression of type `bool` can be used as a
-pattern guard.
+:: hd2 :: tl` has been matched successfully. The right hand side
+expression of the matching is then only evaluated if the guard
+expression also evaluates to `true`. If the guard expression evaluates
+to `false`, the next matching is tried. In general, any expression of
+type `bool` can be used as a pattern guard.
 
 Here is a slightly optimized version of the above implementation that
-uses a variable binding pattern to avoid the construction of a copy of
-the tail list in the first case of the match expression:
+uses a variable binding pattern to avoid the allocation of a new cons
+node for the tail list passed to the recursive call in the right hand
+side of the first matching:
 
 ```ocaml
 let rec removeDuplicates = function
@@ -854,40 +907,6 @@ let rec removeDuplicates = function
 ```
 
 Note that `tl` is bound to the value matched by the pattern `hd2 :: _`.
-
-##### The `option` Type
-
-A useful predefined ADT is the `option` type:
-
-```ocaml
-type 'a option =
-  | None
-  | Some of 'a
-```
-
-This type is useful for defining *partial* functions that may not
-always have a defined return value. For instance, here is how we can
-implement a function `find` that finds the value associated with a
-given key `k` in a map implemented as a binary search tree:
-
-```ocaml
-let res find k = function
-  | Node (k1, v, left, right) ->
-    if k1 = k then Some v
-    else if k1 > k then find k left
-    else find k right
-  | Leaf -> None
-```
-
-A client of `find` can now pattern match on the result value of `find`
-to determine whether the key `k` was present in the tree and what the
-associated value `v` was. The advantage of this implementation is that
-the static type checker will check for us that we consider the
-possibility that the key was not found. Contrast this with the use of
-`null` as an indicator of an undefined return value in many other
-languages, which often leads to run-time errors because the case that
-the case of a `null` value is not handled by the client and the
-compiler is unable to detect this.
 
 #### Beyond Basic ADTs
 
