@@ -416,8 +416,7 @@ The primitive types of OCaml are
 
 Type | Examples | Description
 ---|---|---
-`int` | 1, 2, 42, ... | 31-bit signed int on
-32-bit processors, or 63-bit signed int on 64-bit processors
+`int` | 1, 2, 42, ... | 31-bit signed int on 32-bit processors, or 63-bit signed int on 64-bit processors
 `int32` | Int32.zero, ... | 32-bit signed integer
 `int64` | Int64.zero, ... | 64-bit signed integer
 `float` | 1.0 3.4, ... | IEEE double-precision floating point, equivalent to C's `double`
