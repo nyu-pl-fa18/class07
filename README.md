@@ -95,7 +95,8 @@ as a set of rules for answering questions such as
 
 *Type checking* is the process of ensuring that a program obeys the
 type system's type compatibility rules. A violation of the rules is
-called a *type error* or *type clash*.
+called a *type error* or *type clash*. A program that is free of type
+errors is considered to be *well-typed*.
 
 Languages differ greatly in the way they implement type
 checking. These approaches can be loosely categorized into
@@ -174,21 +175,108 @@ to the definition given above, JavaScript is strongly typed.
 
 ### Type Inference
 
-COMING SOON
+Type inference concerns the problem of statically inferring the type
+of an expression from the types of its parts. All static type systems
+perform some amount of type inference. For instance, consider the
+`Scala` expression
+
+```scala
+1 + 2
+```
+
+Here, the static type checker can infer that the result of value must be
+an `Int` value because the two operands are `Int` values, and hence
+`+` is interpreted as integer addition, which produces a value of type
+`Int`.
+
+The situation is more complicated if variables are involved:
+
+```scala
+x + y
+```
+
+The operator `+` is overloaded and can mean different things depending
+on the types of its operands. For instance, if `x` is a string, `+` is
+interpreted as string concatenation. If `x` is a `Double` it is
+interpreted as floating point addition, etc. This is one of the
+reasons why Scala requires type annotations for the parameters of
+functions, as this is needed for overloading resolution.
+
+In languages without operator overloading, the types of expressions
+like `x + y` can still be inferred automatically even if the types of
+the variables `x` and `y` are not explicitly specified. For instance,
+if `+` is not overloaded and always means integer addition, then the
+expression can only be well-typed if both `x` and `y` are integer
+values. One can thus infer the types of variables from how they
+are used in the code. Enabling this kind of more general type
+inference requires a carefully designed type system. For instance, the
+ML family of languages supports this feature.
 
 ### Type equivalence
 
-COMING SOON
+Type equivalence concerns the question when two types are considered
+to be equal (i.e. represent the same set of values). One distinguishes
+two basic ways of how to define type equivalence: *nominal typing* and
+*structural typing*:
+
+* Nominal typing: two types are the same only if they have the same name
+ (each type definition introduces a new type)
+ 
+ * *strict*: aliases (i.e. declaring a type equal to another type) are distinct
+ * *loose*: aliases are equivalent
+
+* Structural typing: two types are equivalent if they have the same
+  structure. That is, they are structurally identical when viewed as
+  terms constructed from primitive types and type constructors.
+
+Most languages use a mixture of nominal and structural typing. For
+instance, in Scala, object types use nominal typing but generic types
+use structural typing.
 
 ### Type compatibility
 
-COMING SOON
+Type compatibility concerns the questions when a particular value (or
+expression) of type `t` can be used in a context that expects a
+different type `s`. From a denotational view of types this corresponds
+to the question whether the values described by `t` are a subset of
+the values described by `s`. This question is closely related to the
+notion of subtyping in object-oriented languages.
+
+However, more generally, type compatibility may also concern cases
+where the representations of the values of the two types `t` and `s`
+differ, but there is a natural conversion from `t` to `s`. For
+instance, many languages allow integer values to be used in floating
+point operations. E.g. consider the following `Scala` expression
+
+```scala
+1.3 + 1
+```
+
+Here, the `+` operator will be interpreted as an operation on `Double`
+values because at least one of the operands is a double value. Hence,
+both operands are expected to be of type `Double`. However, the second
+operand is `1`, which is of type `Int`. The representations of `Int`
+and `Double` values differ. Nevertheless, the expression is well-typed
+according to Scala's typing rules: the type `Int` is compatible with
+the type `Double`.
+
+To account for the different representation of `Int` and `Double`
+values, the compiler will generate code that performs an implicit
+conversion of the `Int` value `1` to the `Double` value `1.0` (in this
+case, the conversion can be done statically at compile-time but this
+is not possible in general if e.g. `1` is replaced by an `Int`
+variable). This kind of implicit conversion code is referred to as a
+*type coercion*.
+
+Determining if and when type coercions should be applied is a major
+design aspect that distinguishes the type systems of different
+programming languages.
 
 ## Introduction to OCaml 
 
-We will study these concepts in more depth in the context of the OCaml
-language and later when we revisit Scala as an example of an
-object-oriented language.
+We will study these concepts related to types and type systems in more
+depth in the context of the OCaml language and later when we revisit
+Scala as an example of an object-oriented language.
 
 OCaml belongs to the ML family of languages. ML stands for *Meta
 Language*, which was originally developed by Robin Milner in the early
