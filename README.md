@@ -174,27 +174,43 @@ to the definition given above, JavaScript is strongly typed.
 
 ### Type Inference
 
-
+COMING SOON
 
 ### Type equivalence
 
+COMING SOON
+
 ### Type compatibility
+
+COMING SOON
+
+## Introduction to OCaml 
 
 We will study these concepts in more depth in the context of the OCaml
 language and later when we revisit Scala as an example of an
 object-oriented language.
-
-## Introduction to OCaml 
 
 OCaml belongs to the ML family of languages. ML stands for *Meta
 Language*, which was originally developed by Robin Milner in the early
 1970s for writing theorem provers (i.e., programs that can
 automatically find and check the proofs of mathematical theorems). ML
 took many inspirations from Lisp but introduced several new language
-features intended to make programming less error prone, in particular
-a powerful and very well designed static type system.
+features intended to make programming less error prone. In particular,
+ML features a powerful and very well designed static type system. 
 
-Languages that belong to the ML family share the following features:
+Specifically, the type systems of ML-style languages provide strong
+static type checking while eliminating most of the overhead that is
+normally associated with static type systems. In particular, for the
+most part, the programmer does not need to provide any explicit type
+annotations. Instead, the type checker of the compiler can
+automatically infer these types by analyzing the syntactic structure
+of the program. To this day, the languages in the ML family occupy a
+unique sweet spot in the design space of type systems by providing
+the benefits of static typing while retaining some of the most
+important benefits of dynamically typed languages.
+
+More generally, languages that belong to the ML family share the
+following features:
 
 * clean syntax (few parenthesis)
 * functions are first-class values
@@ -205,13 +221,12 @@ Languages that belong to the ML family share the following features:
 * strong static typing
 * powerful type system
   * parametric polymorphism (similar to generics)
-  * structural equivalence of types
+  * structural type equivalence
+  * user-definable algebraic data types and pattern matching
   * all of this with automated static type inference!
 * advanced module system with higher-order modules (*functors*)
 * exceptions
-* miscellaneous features:
-  * user-definable algebraic data types and pattern matching
-  * imperative features: mutable arrays, references, and record fields
+* imperative features: mutable arrays, references, and record fields
 
 Popular implementations and dialects of ML include
 
@@ -231,7 +246,6 @@ languages in the ML family, OCaml also provides:
 
 * a compiler that produces efficient native machine code for many
   architectures
-  
 * a class system that enables object-oriented programming
 
 We will ignore OCaml's class system and imperative features and focus
@@ -1127,7 +1141,7 @@ let flip f x y = f y x
 ```
 
 To infer the most general type of `flip`, we can proceed as
-follows. First, the syntactic structure of the `let` constructs tells
+follows. First, the syntactic structure of the `let` construct tells
 us that `flip` must be a curried function that takes in three
 parameters `f`, `x`, and `y` one at a time. Thus let us introduce type
 variables for the types of those parameters:
@@ -1145,7 +1159,7 @@ where `'d` stands for the type of the body `f y x` of the function.
 Now let's analyze the body `f y x` to infer additional constraints on
 these type variables. When we evaluate `f y x`, we will first evaluate
 the call `f y`. From this expression, we can infer that `f` must be a
-function (since it occurs on the left hand side of a call). Thus the
+function (since it occurs on the left hand side of a call). Thus, the
 type `'a` of `f` must be a function type. Moreover, since we are
 passing `y` to `f`, we can conclude that the parameter type of that
 function type must be the type `'c` of `y`. Hence, we can conclude
