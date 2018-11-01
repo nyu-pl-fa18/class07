@@ -363,6 +363,7 @@ On Ubuntu do:
 sudo apt install opam
 ```
 
+
 Please read the [installation instructions of
 opam](https://opam.ocaml.org/doc/Install.html) if you have another
 operating system.
@@ -373,7 +374,26 @@ following commands in a terminal:
 
 ```bash
 opam init
+```
+
+If you see a warning related to a missing `m4` dependency, then
+install `m4` before you proceed using
+
+```bash
+brew install m4
+```
+
+respectively
+
+```bash
+sudo apt install m4
+```
+
+Then you can create a 'switch' for the most recent OCaml release by executing
+
+```bash
 opam switch create 4.07.0 # may not be needed
+eval `opam config env`
 ```
 
 The installation will take a while since opam will download the
@@ -418,7 +438,7 @@ opam install -y ounit
 ```
 
 These tools provide similar functionality as `sbt` and `scalatest`
-does for Scala.
+do for Scala.
 
 Several IDEs have plugins for OCaml. I suggest to use
 [Merlin](https://github.com/ocaml/merlin) which provides IDE support
