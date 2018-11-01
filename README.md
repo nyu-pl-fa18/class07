@@ -355,20 +355,21 @@ install opam on your system.
 
 Once you have opam installed, you can install and set up the most
 recent version of the OCaml language and compiler by executing the
-following command in a terminal:
+following commands in a terminal:
 
 ```bash
 opam init
+opam switch create 4.07.0
 ```
 
 The installation will take a while since opam will download the
 sources of the OCaml compiler and compile it from scratch. Follow
-the instructions provided by the output of this command to set up your
+the instructions provided by the output of these commands to set up your
 environment variables. Once, the installation has completed, you can
 execute `ocaml`, which starts an OCaml REPL session:
 
 ```ocaml
-        OCaml version 4.07.1
+        OCaml version 4.07.0
 
 #
 ```
