@@ -348,10 +348,24 @@ precompiled packages for OCaml. There is also a Windows
 installer. However, I suggest to install OCaml
 using [opam](https://opam.ocaml.org/), which is a package manager for
 OCaml that makes it easy to install many other useful tools for
-developing OCaml programs. Please follow
-the
-[installation instructions of opam](https://opam.ocaml.org/doc/Install.html) to
-install opam on your system.
+developing OCaml programs. 
+
+On MacOS do:
+
+```bash
+brew install ocaml
+brew install opam
+```
+
+On Ubuntu do:
+
+```bash
+sudo apt install opam
+```
+
+Please read the [installation instructions of
+opam](https://opam.ocaml.org/doc/Install.html) if you have another
+operating system.
 
 Once you have opam installed, you can install and set up the most
 recent version of the OCaml language and compiler by executing the
@@ -359,7 +373,7 @@ following commands in a terminal:
 
 ```bash
 opam init
-opam switch create 4.07.0
+opam switch create 4.07.0 # may not be needed
 ```
 
 The installation will take a while since opam will download the
