@@ -341,6 +341,8 @@ on the functional core of the language.
 
 ### Installation, Build Tools, and IDEs
 
+#### Linux and MacOS
+
 Most Linux distributions as well as homebrew on Mac OS come with
 precompiled packages for OCaml. There is also a Windows
 installer. However, I suggest to install OCaml
@@ -388,27 +390,66 @@ These double semicolons are only needed in the REPL but not in source
 code files that are processed by the compiler.
 
 In addition to the OCaml compiler and runtime, you also want to
-install the OCaml library
-manager
-[ocamlfind](http://projects.camlcity.org/projects/findlib.html) and
-the OCaml build
-tool [ocamlbuild](https://github.com/ocaml/ocamlbuild/).  You can
-do this via opam:
+install the OCaml library manager
+[ocamlfind](http://projects.camlcity.org/projects/findlib.html), the
+OCaml build tool [ocamlbuild](https://github.com/ocaml/ocamlbuild/),
+and the OCaml unit testing framework
+[OUnit](http://ounit.forge.ocamlcore.org/). You can do this via opam:
 
 ```bash
 opam install -y ocamlfind
 opam install -y ocamlbuild
+opam install -y ounit
 ```
 
-These tools provide similar functionality as `sbt` does for Scala.
+These tools provide similar functionality as `sbt` and `scalatest`
+does for Scala.
 
-Several IDEs have plugins for OCaml. I suggest to
-use [Merlin](https://github.com/ocaml/merlin) which provides IDE
-support for OCaml in common editors like Emacs and Vim. Merlin can
-also be integrated into other editors and IDEs via third-party
-plugins, including Atom, Sublime, and Visual Studio Code. For
-installation instructions via opam and further details, please see
-[Merlin's project website](https://github.com/ocaml/merlin).
+Several IDEs have plugins for OCaml. I suggest to use
+[Merlin](https://github.com/ocaml/merlin) which provides IDE support
+for OCaml in common editors like Emacs and Vim. Merlin can also be
+integrated into other editors and IDEs via third-party plugins,
+including Atom, Sublime, and Visual Studio Code. You can install it
+via opam by executing:
+
+```bash
+opam install -y merlin
+```
+
+See the installation instructions on [Merlin's project
+website](https://github.com/ocaml/merlin) for further details on how
+to configure various editors.
+
+If you want a modern IDE, [Visual Studio
+Code](https://code.visualstudio.com/) works well with OCaml in my
+experience. Follow the installation instructions for your operating
+system/distribution. For supporting OCaml, you should install the
+[OCaml and Reason
+IDE](https://marketplace.visualstudio.com/items?itemName=freebroccolo.reasonml)
+extension. You can do this from within Visual Studio Code by selecting
+
+```
+File -> Preferences -> Extensions
+```
+
+Then search for the `vscode-reasonml` extension and install it. The
+extension builds on top of Merlin which you can install via opam (see
+above).
+
+#### Windows 10
+
+If you are using Windows 10, I suggest to proceed as follows (this is
+the setup I have been using in class). Install Ubuntu via the Windows
+Subsystem for Linux. Use e.g. the instructions in the following two
+tutorials to do this:
+
+* [Install WSL - Windows Subsystem for Linux](https://solarianprogrammer.com/2017/04/15/install-wsl-windows-subsystem-for-linux/)
+
+* [Using the Windows Subsystem for Linux with Xfce 4](https://solarianprogrammer.com/2017/04/16/windows-susbsystem-for-linux-xfce-4/)
+
+Then follow the installation instructions for Ubuntu above and install
+everything within your Ubuntu subsystem. In particular, install Visual
+Studio Code within Ubuntu rather than as a Window app.
 
 ### Syntax
 
@@ -483,7 +524,7 @@ parameter:
 let plus (x, y) = x + y
 ```
 
-Recursive definitions are introduces using `let rec x = init`. Here
+Recursive definitions are introduced using `let rec x = init`. Here
 the scope of the binding includes the expression `init`.
 
 ```ocaml
@@ -789,320 +830,6 @@ function of type `b -> 'a -> 'c`.
 We will discuss below how the compiler infers this type from the
 definition of `flip`.
 
-
-#### Algebraic Datatypes and Pattern Matching
-
-OCaml provides type constructors for user-defined immutable
-tree-like data structures. These are known as *algebraic datatypes*
-(ADTs), *variant types*, or *(disjoint) sum types*. 
-
-Here is an example of an ADT for representing binary search trees:
-
-```ocaml
-type tree =
-  | Leaf
-  | Node of int * tree * tree
-```
-
-This type definition specifies that a value of type `tree` is either a
-leaf node, `Leaf`, or an internal node, `Node`, which consists of an
-integer value, and two subtrees (the left and right subtree of the
-node). `Leaf` and `Node` are referred to as the *variant constructors*
-of the ADT `tree`.
-
-The variant constructors `Leaf` and `Node` also serve as the value
-constructors for type `tree`:
-
-```ocaml
-# let empty = Leaf ;;
-val empty : tree = Leaf
-
-# let t = Node (3, Node (1, Leaf, Leaf), Node (6, Leaf, Leaf)) ;;
-val t : tree = Node (3, Node (1, Leaf, Leaf), Node (6, Leaf, Leaf))
-```
-
-One nice feature of ADTs is that equality `=` is defined structurally
-on ADT values, similar to lists and tuples.
-
-##### Pattern Matching
-
-ADT values can be deconstructed using pattern matching. Pattern
-matching expressions take the form:
-
-```ocaml
-match e with
-| p1 -> e1
-...
-| pn -> en
-```
-
-Similar to match expressions in Scheme, this expression first
-evaluates `e` and then matches the obtained value `v` against the
-patterns `p1` to `pn`. For the first *matching* `pi -> ei` whose
-pattern `pi` matches `v`, the right-hand-side expression `ei` is
-evaluated. The value obtained from `ei` is then the result value of
-the entire match expression. If no pattern matches, then a run-time
-exception will be thrown.
-
-The most important kinds of patterns `p` are:
-
-* a constant literal pattern `c`: here `c` must be a constant literal
-  such as `1`, `1.0`, `"Hello"`, `[]`, etc. The pattern `c` matches a
-  value `v` iff `v` is equal to `c`.
-
-* a wildcard pattern `_`: matches any value
-
-* a variable pattern `x`: matches any value and binds `x` to that
-  value in the right-hand-side expression of the matching.
-
-* a constructor pattern `C p1`: here, `C` must be an ADT variant `C of
-  t1` of some ADT and `p1` must be a pattern that matches values of
-  type `t1`. Then `p` matches a value `v` if `v` is of the form `C v1`
-  for some value `v1` matched by `p1`.
-    
-* a tuple pattern `(p1, ..., pn)`: matches a value `v` if `v` is a
-  tuple `(v1, ..., vn)` where `v1` to `vn` are some values matched by
-  the patterns `p1` to `pn`.
-
-* a cons pattern `p1 :: p2`: matches values `v` that are lists of the
-  form `v1 :: v2` where the head `v1` is matched by `p1` and the tail
-  `v2` by `p2`.
-  
-* a variable binding pattern `(p1 as x)`: matches values `v` that are
-  matched by `p1` and binds `x` to `v` in the right hand side of the
-  matching.
-
-Here is how we use pattern matching to define a function that checks
-whether a binary search tree is sorted:
-
-```ocaml
-let is_sorted t = 
-  let rec check min max t = 
-    match t with
-    | Leaf -> true
-    | Node (x, left, right) ->
-      min <= x && x <= max && 
-      check min x left &&
-      check x max right
-  in
-  check min_int max_int t
-```
-
-If we define a function whose body is a match expression that matches
-the parameter of the function:
-
-```ocaml
-fun x -> match x with
-| p1 -> e1
-...
-| pn -> en
-```
-
-and the parameter `x` is not used in any of the right hand sides of
-the matchings `e1` to `en`, then this function definition can be
-abbreviated to
-
-```ocaml
-function
-| p1 -> e1
-...
-| pn -> en
-```
-
-We can thus write the function `check` inside of `is_sorted` more
-compactly like this:
-
-```ocaml
-let check min max = function
-| Leaf -> true
-| Node (x, left, right) ->
-  min <= x && x <= max && 
-  check min x left &&
-  check x max right
-```
-
-##### Polymorphic ADTs
-
-ADT definitions can also be polymorphic. For instance, suppose we want
-to use a binary search tree data structure to implement maps of
-integer keys to values, but we want the data structure to be
-parametric in the type of values stored in the map. This can be
-done as follows:
-
-```ocaml
-type 'a tree =
-  | Leaf
-  | Node int * 'a * 'a tree * 'a tree
-```
-
-```ocaml
-# let ti = Node (1, 2, Leaf, Leaf) ;;
-val ti : int tree = Node (1, 2, Leaf, Leaf)
-
-# let ts = Node (1, "banana", Leaf, Leaf) ;;
-val ts : string tree = Node (1, "string", Leaf, Leaf)
-```
-
-##### Checking Exhaustiveness
-
-One of the nice features of OCaml's static type checker is that it can
-help us ensure that pattern matching expressions are exhaustive. For
-instance, suppose we write something like:
-
-```ocaml
-match t with
-| Node (k, v, left, right) -> x
-```
-
-Then the compiler will warn us that we have not considered all
-possible cases of values that `t` can evaluate to. The compiler will
-even provide examples of values that we have not considered in the
-match expression: in this case `Leaf`. This feature is particularly
-useful for match expressions that involve complex nested patterns.
-
-##### The `option` Type
-
-One of the predefined ADTs of OCaml is the `option` type:
-
-```ocaml
-type 'a option =
-  | None
-  | Some of 'a
-```
-
-This type is useful for defining *partial* functions that may not
-always have a defined return value. For instance, here is how we can
-implement a function `find` that finds the value associated with a
-given key `k` in a map implemented as a binary search tree, if such an
-association exists:
-
-```ocaml
-let res find k = function
-  | Node (k1, v, left, right) ->
-    if k1 = k then Some v
-    else if k1 > k then find k left
-    else find k right
-  | Leaf -> None
-```
-
-A client of `find` can now pattern-match on the result value of `find`
-to determine whether the key `k` was present in the tree and what the
-associated value `v` was in that case. The advantage of this
-implementation is that the static type checker will check for us that
-the client code will also consider the possibility that the key was
-not found by `find`.
-
-Contrast this with the use of `null` as an indicator of an undefined
-return value in many other languages. The use of `null` values often
-leads to run-time errors because the `null` case is not handled by the
-client code and the compiler is unable to detect this at compile-time.
-
-##### Tuples and Lists as ADTs
-
-Note that both tuples and lists are just special cases of algebraic
-data types. In particular, we can use list and tuple constructors in
-patterns for pattern matching, like any other variant constructor of
-an algebraic data type:
-
-Example: reversing a list
-
-```ocaml
-let reverse xs = 
-  let rec reverse_helper rev_xs = function
-  | hd :: tl -> reverse_helper (hd :: rev_xs) tl
-  | [] -> rev_xs
-  in reverse_helper [] xs
-  
-# reverse [1; 2; 3];;
-- : int list = [3; 2; 1]
-```
-
-Having tuples and lists as types that are built into the language is
-just a matter of convenience. One could just as well implement lists
-and tuples as user-defined types in a library. Here, is a user-defined
-version of the type `'a list`:
-
-```ocaml
-type 'a mylist = 
-  | Nil
-  | Cons of 'a * 'a mylist
-```
-
-```ocaml
-# let reverse xs = 
-  let rec reverse_helper rev_xs = function
-  | Cons (hd, tl) -> reverse_helper (Cons (hd, rev_xs)) tl
-  | Nil -> rev_xs
-  in reverse_helper Nil xs 
-;;
-val reverse: 'a mylist -> 'a mylist
-
-# reverse (Cons (1, Cons (2, Cons (3, Nil))));;
-- : int mylist = Cons (3, Cons (2, Cons (1, Nil)))
-```
-
-##### Pattern Guards
-
-One restriction of patterns in OCaml is that a variable pattern `x` is
-only allowed to occur at most once in a compound pattern. For
-instance, lets look at the following literal translation of our
-implementation of `removeDuplicates` from Scheme to OCaml:
-
-```ocaml
-let rec removeDuplicates = function
-  | hd :: hd :: tl -> removeDuplicates (hd :: tl)
-  | hd :: tl -> hd :: removeDuplicates tl
-  | [] -> []
-```
-
-The compiler will complain with the following error for the first
-matching in the definition of `removeDuplicates`:
-
-```
-Error: Variable hd is bound several times in this matching
-```
-
-We can avoid this problem by using different variable names for the
-two occurrences of `hd` in the pattern of the first matching and then
-enforce the equality of the values matched by these variables using a
-*pattern guard*:
-
-```ocaml
-let rec removeDuplicates = function
-  | hd1 :: hd2 :: tl when hd1 = hd2 -> removeDuplicates (hd2 :: tl)
-  | hd :: tl -> hd :: removeDuplicates tl
-  | [] -> []
-```
-
-The guard expression `hd1 = hd2` is evaluated after the pattern `hd1
-:: hd2 :: tl` has been matched successfully. The right hand side
-expression of the matching is then only evaluated if the guard
-expression also evaluates to `true`. If the guard expression evaluates
-to `false`, the next matching is tried. In general, any expression of
-type `bool` can be used as a pattern guard.
-
-Here is a slightly optimized version of the above implementation that
-uses a variable binding pattern to avoid the allocation of a new cons
-node for the tail list passed to the recursive call in the right hand
-side of the first matching:
-
-```ocaml
-let rec removeDuplicates = function
-  | hd1 :: (hd2 :: _ as tl) when hd1 = hd2 -> removeDuplicates tl
-  | hd :: tl -> hd :: removeDuplicates tl
-  | [] -> []
-```
-
-Note that `tl` is bound to the value matched by the pattern `hd2 :: _`.
-
-#### Beyond Basic ADTs
-
-OCaml also supports several generalizations of the basic ADTs
-discussed here,
-including
-[generalized algebraic datatypes](https://caml.inria.fr/pub/docs/manual-ocaml/extn.html#sec252) and
-[extensible variant types](https://caml.inria.fr/pub/docs/manual-ocaml/extn.html#sec266).
-
 #### Records
 
 A *record* is a collection of named values called *fields* (think of
@@ -1158,168 +885,4 @@ val john : person = {first_name = "John"; last_name = "Doe"}
 # jane.first_name
 - : string = "Jane"
 ```
-
-### Type Compatibility
-
-Type compatibility in OCaml is based on the notion
-of
-[*unification*](https://en.wikipedia.org/wiki/Unification_(computer_science)). 
-
-A *substitution* σ for a type `t` is a mapping of the type variables
-occurring in `t` to types. Example: a possible substitution for
-the type `'a -> 'b` is the mapping σ = `{'a ~> int, 'b ~> int}`. Another
-one is σ'=`{'a ~> 'a, 'b ~> 'b}`. 
-
-Applying a substitution σ to a type `t`, written `t`σ, results in the
-type `t` where all occurrences of type variables have been replaced
-with according to σ. For instance, if `t` = `'a -> 'b` and σ = `{'a
--> int, 'b -> int}`, then `t`σ = `int -> int`.
-
-Two types `s` and `t` are said to be *unifiable* if there exists a
-substitution σ for the type variables occurring in both `s` and `t`
-such that `s`σ = `t`σ. The substitution σ is called a *unifier* for `s`
-and `t`. Example: the (unique) unifier for `s = 'a -> int` and `t =
-string -> 'b` is σ = `{'a ~> string, 'b ~> int}`. On the other hand,
-there exists no unifier for `t = 'a -> int` and `s = string -> 'a`
-because `string` and `int` are distinct types.
-
-A type `t` is *more general* than a type `s` if there exists a unifier σ
-for `t` and `s` such that `s`σ = `s`. Example: the type `'a -> 'b` is
-more general than the type `int -> 'b`.
-
-A value `v` of type `t` is compatible with type `s` (i.e. `v` can be
-used in a context that expects a value of type `t`) if `t` is more
-general than `s`. This definition may seem counter-intuitive at
-first. However, it captures the intuition that the more general type `t`
-denotes a smaller set of values than `s` and, hence, every value of
-type `t` is also a value of type `s`. To see this, consider the types
-`t = 'a -> int` and `s = int -> int`, then `t` is more general than
-`s`. Now take the expression `f 3 + 1`. Here, the context of `f`
-expects `f` to be a function of type `int -> int` because we are
-calling `f` with value `3` which is of type `int` and we are using the
-result of the call in an addition operation using `+` which also
-expects arguments of type `int`.
-
-Now, if the actual type of `f` is `'a -> int`, then this tells us that
-we can call `f` with any value we like, including `int` values and the
-result is always going to be an `int`. Thus it is safe to use `f` in
-this context.
-
-### Type Inference
-
-The idea behind the type inference algorithm of OCaml (and related
-languages in the ML family) is to compute for every subexpression `e`
-in a program, the most general type `t` such that all the values `v`
-that `e` may evaluate to have type `t`.
-
-The algorithm is guided by the syntax of expressions, taking advantage
-of the fact that the constant literals, inbuilt operators, and value
-constructors from which expressions are built impose constraints on
-the types that the values of these expressions may have. Technically,
-the algorithm works by deriving a system of type equality constraints
-from every expression and then solving this constraint system by
-computing a *most general unifier* that satisfies all the type
-equalities simultaneously.
-
-Rather than describing this algorithm formally, we explain it through
-an example. Let us reconsider the function `flip`:
-
-```ocaml
-let flip f x y = f y x
-```
-
-To infer the most general type of `flip`, we can proceed as
-follows. First, the syntactic structure of the `let` construct tells
-us that `flip` must be a curried function that takes in three
-parameters `f`, `x`, and `y` one at a time. Thus let us introduce type
-variables for the types of those parameters:
-
-* `f: 'a`
-* `x: 'b`
-* `y: 'c`
-
-Then `flip` itself must have a type of the shape
-
-`flip: 'a -> 'b -> 'c -> 'd`
-
-where `'d` stands for the type of the body `f y x` of the function.
-
-Now let's analyze the body `f y x` to infer additional constraints on
-these type variables. When we evaluate `f y x`, we will first evaluate
-the call `f y`. From this expression, we can infer that `f` must be a
-function (since it occurs on the left hand side of a call). Thus, the
-type `'a` of `f` must be a function type. Moreover, since we are
-passing `y` to `f`, we can conclude that the parameter type of that
-function type must be the type `'c` of `y`. Hence, we can conclude
-that `'a` and `'c` must satisfy the equality
-
-`'a = ('c -> 'e)`
-
-for some type represented by type variable `'e`. 
-
-After, evaluating `f y`, we would call the result of this call again,
-passing `x` as argument. Thus we can conclude that the result type
-`'e` must again be a function type, and the parameter type of this
-function type must be the type of `x` which is `'b`. Thus:
-
-`'e = ('b -> 'g)`
-
-for some type variable `'g` representing the type of the result value
-of the second call.
-
-Finally, we know that the result value of `f x y` whose type is `'g`
-is also the final result value of `flip`, which have determined to be
-`'d`. Thus we must also have
-
-`'d = 'g`
-
-In total, we have collected the constraints:
-
-`'a = ('c -> 'e)`
-
-`'e = ('b -> 'g)` and
-
-`'d = 'g`
-
-We are now looking for a most general unifier that unifies the types
-in each equality constraint simultaneously. The basic idea for this
-unifier, is just to orient the equations, so that equalities between a
-type variable and a type are viewed as a mapping in a substitution:
-
-
-`'a ~> ('c -> 'e)`
-
-`'e ~> ('b -> 'g)`
-
-`'d ~> 'g`
-
-We only need to make sure that the variables on the left-hand sides of
-the mappings `~>` don't occur on the right-hand sides. Here only `'e`
-occurs on both sides. We can eliminate `'e` on the right-hand side by
-applying the substitution `'e ~> ('b -> 'g)` yielding
-
-`'a ~> ('c -> ('b -> 'g))`
-
-`'e ~> ('b -> 'g)`
-
-`'d ~> 'g`
-
-Note that applying this substitution to the types of both sides of
-each equality constraint in our constraint system in fact makes the
-types in each equality constraint equal.
-
-If we now apply this substitution to the type 
-
-`'a -> 'b -> 'c -> 'd`
-
-of `split`, we obtain:
-
-`('c -> ('b -> 'g)) -> 'b -> 'c -> 'g`
-
-Note that this type is equal to the type
-
-`('a -> 'b -> 'c) -> 'b -> 'a -> 'c`
-
-which the OCaml compiler infers, assuming we simultaneously rename
-`'c` to `'a` and `'g` to `'c`.
 
