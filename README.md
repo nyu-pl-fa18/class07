@@ -914,10 +914,10 @@ convenient syntax for copying record fields:
 # let john = { jane with first_name = "John } ;;
 val john : person = {first_name = "John"; last_name = "Doe"}
 
-# john.first_name
+# john.first_name ;;
 - : string = "John"
 
-# jane.first_name
+# jane.first_name ;;
 - : string = "Jane"
 ```
 
