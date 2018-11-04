@@ -885,7 +885,7 @@ definition before they can be used. Example:
   { first_name: string;
     last_name: string;
     age: int
-  }
+  } ;;
 
 # let jane = 
     { first_name = "Jane"; 
@@ -898,7 +898,7 @@ We can access a field of `f` of a record `x` by using the notation
 `x.f`:
 
 ```ocaml
-# jane.last_name
+# jane.last_name ;;
 - : string = "Doe"
 ```
 
