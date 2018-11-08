@@ -883,8 +883,7 @@ definition before they can be used. Example:
 ```ocaml
 # type person = 
   { first_name: string;
-    last_name: string;
-    age: int
+    last_name: string
   } ;;
 
 # let jane = 
